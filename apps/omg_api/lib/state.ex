@@ -196,7 +196,7 @@ defmodule OMG.API.State do
     {:noreply, new_state}
   end
 
-  defp do_form_block(state, eth_height \\ nil) do
+  defp do_form_block(%Core{pending_txs: pending_txs} = state, eth_height \\ nil) do
     {:ok, child_block_interval} = Eth.RootChain.get_child_block_interval()
 
     {core_form_block_duration, {:ok, {%Block{number: blknum} = block, event_triggers, db_updates}, new_state}} =
@@ -213,13 +213,11 @@ defmodule OMG.API.State do
 
     ### casts, note these are no-ops if given processes are turned off
     FreshBlocks.push(block)
-    BlockQueue.enqueue_block(block.hash, block.number)
+    BlockQueue.enqueue_block(block)
     # enrich the event triggers with the ethereum height supplied
     event_triggers
     |> Enum.map(&Map.put(&1, :submited_at_ethheight, eth_height))
     |> EventerAPI.emit_events()
-
-    ###
 
     {:ok, new_state}
   end
