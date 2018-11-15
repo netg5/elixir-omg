@@ -24,8 +24,9 @@ defmodule OMG.API.State.PropTest.Transaction do
   require Constants
   require Utxo
 
-  def normalize_variables({inputs, future_owners}) do
+  def normalize_variables({inputs, currency, future_owners}) do
     stable_entities = OMG.API.TestHelper.entities_stable()
+    currency = Map.get(Constants.currencies(), currency)
 
     {
       inputs
@@ -33,18 +34,18 @@ defmodule OMG.API.State.PropTest.Transaction do
         {blknum, tx_index, oindex, Map.get(stable_entities, owner)}
       end),
       future_owners
-      |> Enum.map(fn {owner, currency, amount} ->
-        {Map.get(stable_entities, owner), Map.get(Constants.currencies(), currency), amount}
+      |> Enum.map(fn {owner, amount} ->
+        {Map.get(stable_entities, owner), currency, amount}
       end)
     }
   end
 
   def create(variable) do
-    {inputs, future_owners} = normalize_variables(variable)
+    {inputs, outputs} = normalize_variables(variable)
 
     OMG.API.TestHelper.create_recovered(
       inputs,
-      future_owners
+      outputs
     )
   end
 
@@ -104,6 +105,7 @@ defmodule OMG.API.State.PropTest.Transaction do
   end
 
   def post(_state, _args, {:ok, _}), do: true
+  def post(_, _, resp), do: IO.inspect(resp)
 
   def next(%{model: %{history: history, balance: balance} = model} = state, [transaction | _], _) do
     %{state | model: %{model | history: [{:transaction, transaction} | history], balance: balance}}

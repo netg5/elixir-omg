@@ -40,12 +40,12 @@ defmodule OMG.Watcher.Integration.ChallengeExitTest do
     # NOTE: we're explicitly skipping erc20 challenges here, because eth and erc20 exits/challenges work the exact same
     #       way, so the integration is tested with the eth test
 
-    tx = API.TestHelper.create_encoded([{deposit_blknum, 0, 0, alice}], @eth, [{alice, 10}])
+    tx = API.TestHelper.create_encoded([{deposit_blknum, 0, 0, alice}], [{alice, @eth, 10}])
     {:ok, %{blknum: exiting_utxo_block_nr}} = Client.call(:submit, %{transaction: tx})
 
     IntegrationTest.wait_until_block_getter_fetches_block(exiting_utxo_block_nr, @timeout)
 
-    tx2 = API.TestHelper.create_encoded([{exiting_utxo_block_nr, 0, 0, alice}], @eth, [{alice, 10}])
+    tx2 = API.TestHelper.create_encoded([{exiting_utxo_block_nr, 0, 0, alice}], [{alice, @eth, 10}])
     {:ok, %{blknum: double_spend_block_nr}} = Client.call(:submit, %{transaction: tx2})
 
     IntegrationTest.wait_until_block_getter_fetches_block(double_spend_block_nr, @timeout)

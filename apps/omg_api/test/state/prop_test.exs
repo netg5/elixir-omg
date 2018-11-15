@@ -146,7 +146,7 @@ defmodule OMG.API.State.PropTest do
         (result == :ok)
         |> when_fail(
           (fn ->
-             Logger.info("History: #{inspect(history)}")
+             Logger.error("History: #{inspect(history)}")
              Logger.error("Result: #{inspect(result)}")
            end).()
         )

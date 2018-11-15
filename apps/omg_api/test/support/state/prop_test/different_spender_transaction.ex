@@ -42,7 +42,7 @@ defmodule OMG.API.State.PropTest.DifferentSpenderTransaction do
     end)
   end
 
-  def post(_, _, {:error, :incorrect_spender}), do: true
+  def post(_, _, {:error, :unauthorized_spent}), do: true
 
   def next(%{model: %{history: history, balance: balance} = model} = state, [transaction | _], _) do
     %{

@@ -315,7 +315,7 @@ defmodule OMG.Watcher.Web.Controller.TransactionTest do
                "data" => txbytes
              } = TestHelper.rest_call(:post, "/transaction", body, 200)
 
-      expected_tx = Transaction.new([{2000, 111, 0}, {5000, 17, 1}], [{alice, @eth, 97}, {bob, @eth, 100}])
+      expected_tx = Transaction.new([{2000, 111, 0}, {5000, 17, 1}], [{alice.addr, @eth, 97}, {bob.addr, @eth, 100}])
 
       expected_txbytes =
         expected_tx

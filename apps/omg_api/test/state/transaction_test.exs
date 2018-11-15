@@ -73,10 +73,8 @@ defmodule OMG.API.State.TransactionTest do
   @tag fixtures: [:utxos]
   test "create transaction with different number inputs and oputputs", %{utxos: utxos} do
     # 1 - input, 1 - output
-    fees = Map.new([{eth(), 0}])
-
     {:ok, transaction} =
-      Transaction.create_from_utxos([utxos |> hd()], [%{owner: "Joe Black", currency: eth(), amount: 99}], fees)
+      Transaction.create_from_utxos([utxos |> hd()], [%{owner: "Joe Black", currency: eth(), amount: 99}])
 
     assert transaction == %Transaction{
              inputs: [%{blknum: 20, txindex: 42, oindex: 1}, %{blknum: 0, txindex: 0, oindex: 0}],
@@ -90,8 +88,7 @@ defmodule OMG.API.State.TransactionTest do
     {:ok, transaction} =
       Transaction.create_from_utxos(
         utxos |> tl(),
-        [%{owner: "Joe Black", currency: eth(), amount: 22}, %{owner: "McDuck", currency: eth(), amount: 21}],
-        fees
+        [%{owner: "Joe Black", currency: eth(), amount: 22}, %{owner: "McDuck", currency: eth(), amount: 21}]
       )
 
     assert transaction == %Transaction{
@@ -106,8 +103,7 @@ defmodule OMG.API.State.TransactionTest do
     {:ok, transaction} =
       Transaction.create_from_utxos(
         utxos,
-        [%{owner: "Joe Black", currency: eth(), amount: 53}, %{owner: "McDuck", currency: eth(), amount: 90}],
-        fees
+        [%{owner: "Joe Black", currency: eth(), amount: 53}, %{owner: "McDuck", currency: eth(), amount: 90}]
       )
 
     assert transaction == %Transaction{
@@ -119,7 +115,7 @@ defmodule OMG.API.State.TransactionTest do
            }
 
     # 2 - inputs, 0 - outputs
-    {:ok, transaction} = Transaction.create_from_utxos(utxos, [], fees)
+    {:ok, transaction} = Transaction.create_from_utxos(utxos, [])
 
     assert transaction == %Transaction{
              inputs: [%{blknum: 20, txindex: 42, oindex: 1}, %{blknum: 2, txindex: 21, oindex: 0}],
@@ -132,40 +128,29 @@ defmodule OMG.API.State.TransactionTest do
 
   @tag fixtures: [:utxos]
   test "checking input validation error messages", %{utxos: utxos} do
-    fees = Map.new([{eth(), 0}])
-    assert {:error, :inputs_should_be_list} == Transaction.create_from_utxos(%{}, [], fees)
+    assert {:error, :inputs_should_be_list} == Transaction.create_from_utxos(%{}, [])
 
-    assert {:error, :outputs_should_be_list} == Transaction.create_from_utxos(utxos, %{}, fees)
+    assert {:error, :outputs_should_be_list} == Transaction.create_from_utxos(utxos, %{})
 
-    assert {:error, :at_least_one_input_required} == Transaction.create_from_utxos([], [], fees)
+    assert {:error, :at_least_one_input_required} == Transaction.create_from_utxos([], [])
 
-    assert {:error, :too_many_inputs} == Transaction.create_from_utxos(utxos ++ utxos, [], fees)
+    assert {:error, :too_many_inputs} == Transaction.create_from_utxos(utxos ++ utxos, [])
 
-    assert {:error, :too_many_outputs} == Transaction.create_from_utxos(utxos, [%{}, %{}, %{}], fees)
+    assert {:error, :too_many_outputs} == Transaction.create_from_utxos(utxos, [%{}, %{}, %{}])
 
     assert {:error, :amount_noninteger_or_negative} ==
-             Transaction.create_from_utxos(utxos, [%{owner: "Joe", currency: eth(), amount: -4}], fees)
+             Transaction.create_from_utxos(utxos, [%{owner: "Joe", currency: eth(), amount: -4}])
 
     utxo_with_neg_amount = %{(utxos |> hd()) | amount: -10}
 
     assert {:error, :amount_noninteger_or_negative} ==
-             Transaction.create_from_utxos([utxo_with_neg_amount], [%{owner: "Joe", currency: eth(), amount: 4}], fees)
+             Transaction.create_from_utxos([utxo_with_neg_amount], [%{owner: "Joe", currency: eth(), amount: 4}])
 
     assert {:error, :amount_noninteger_or_negative} ==
-             Transaction.create_from_utxos(utxos, [%{owner: "Joe", currency: eth(), amount: "NaN"}], fees)
+             Transaction.create_from_utxos(utxos, [%{owner: "Joe", currency: eth(), amount: "NaN"}])
 
     assert {:error, :not_enough_funds_to_cover_spend} ==
-             Transaction.create_from_utxos(utxos, [%{owner: "Joe", currency: eth(), amount: 144}], fees)
-
-    assert {:error, :not_enough_funds_to_cover_fee} ==
-             Transaction.create_from_utxos(
-               utxos,
-               [%{owner: "Joe", currency: eth(), amount: 140}],
-               Map.new([{eth(), 5}])
-             )
-
-    assert {:error, :invalid_fee} ==
-             Transaction.create_from_utxos(utxos, [%{owner: "Joe", currency: eth(), amount: 4}], Map.new([{eth(), -1}]))
+             Transaction.create_from_utxos(utxos, [%{owner: "Joe", currency: eth(), amount: 144}])
 
     [first_utxo, second_utxo] = utxos
 
@@ -174,15 +159,12 @@ defmodule OMG.API.State.TransactionTest do
     assert {:error, :currency_mixing_not_possible} ==
              Transaction.create_from_utxos(
                utxos_with_more_currencies,
-               [%{owner: "Joe", currency: eth(), amount: 4}],
-               fees
+               [%{owner: "Joe", currency: eth(), amount: 4}]
              )
   end
 
   @tag fixtures: [:alice, :state_alice_deposit, :bob]
   test "using created transaction in child chain", %{alice: alice, bob: bob, state_alice_deposit: state} do
-    fees = Map.new([{eth(), 0}])
-
     state =
       state
       |> TestHelper.do_deposit(alice, %{amount: 10, currency: eth(), blknum: 2})
@@ -192,20 +174,18 @@ defmodule OMG.API.State.TransactionTest do
       %{amount: 10, currency: eth(), blknum: 2, oindex: 0, txindex: 0}
     ]
 
-    {:ok, raw} = Transaction.create_from_utxos(utxos, [%{owner: bob.addr, currency: eth(), amount: 12}], fees)
+    {:ok, raw} = Transaction.create_from_utxos(utxos, [%{owner: bob.addr, currency: eth(), amount: 12}])
 
     raw |> Transaction.sign([alice.priv, alice.priv]) |> assert_tx_usable(state)
   end
 
   @tag fixtures: [:alice, :state_alice_deposit, :bob]
   test "using created transaction with one input in child chain", %{alice: alice, bob: bob, state_alice_deposit: state} do
-    fees = Map.new([{eth(), 0}])
-
     utxos = [
       %{amount: 10, currency: eth(), blknum: 1, oindex: 0, txindex: 0}
     ]
 
-    {:ok, raw} = Transaction.create_from_utxos(utxos, [%{owner: bob.addr, currency: eth(), amount: 4}], fees)
+    {:ok, raw} = Transaction.create_from_utxos(utxos, [%{owner: bob.addr, currency: eth(), amount: 4}])
 
     raw |> Transaction.sign([alice.priv, <<>>]) |> assert_tx_usable(state)
   end
@@ -218,8 +198,6 @@ defmodule OMG.API.State.TransactionTest do
 
   @tag fixtures: [:alice, :state_empty, :bob]
   test "Transactions created by :new and :create_from_utxos should be equal", %{alice: alice, bob: bob} do
-    fees = Map.new([{eth(), 0}])
-
     utxos = [
       %{amount: 10, currency: eth(), blknum: 1, oindex: 0, txindex: 0},
       %{amount: 11, currency: eth(), blknum: 2, oindex: 0, txindex: 0}
@@ -228,8 +206,7 @@ defmodule OMG.API.State.TransactionTest do
     {:ok, tx1} =
       Transaction.create_from_utxos(
         utxos,
-        [%{owner: bob.addr, currency: eth(), amount: 16}, %{owner: alice.addr, currency: eth(), amount: 5}],
-        fees
+        [%{owner: bob.addr, currency: eth(), amount: 16}, %{owner: alice.addr, currency: eth(), amount: 5}]
       )
 
     tx2 = Transaction.new([{1, 0, 0}, {2, 0, 0}], [{bob.addr, eth(), 16}, {alice.addr, eth(), 5}])

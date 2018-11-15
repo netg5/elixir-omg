@@ -17,7 +17,6 @@ defmodule OMG.Watcher.Challenger.CoreTest do
   use ExUnit.Case, async: true
 
   alias OMG.API.State.Transaction
-  alias OMG.API.TestHelper
   alias OMG.API.Utxo
   alias OMG.Watcher.Challenger.Challenge
   alias OMG.Watcher.Challenger.Core

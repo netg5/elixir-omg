@@ -21,8 +21,6 @@ defmodule OMG.API.CoreTest do
   alias OMG.API.State.Transaction
   alias OMG.API.TestHelper
 
-  @empty_signature <<0::size(520)>>
-
   def eth, do: Crypto.zero_address()
 
   @tag fixtures: [:alice, :bob]
