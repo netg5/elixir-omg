@@ -22,7 +22,7 @@ defmodule OMG.Watcher.Integration.InvalidExitTest do
 
   alias OMG.API
   alias OMG.Eth
-  alias OMG.JSONRPC.Client
+  alias OMG.JSONRPC.Client  # FIXME: http-client
   alias OMG.Watcher.Eventer.Event
   alias OMG.Watcher.Integration.TestHelper, as: IntegrationTest
   alias OMG.Watcher.Web.Channel
